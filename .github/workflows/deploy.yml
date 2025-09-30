@@ -1,0 +1,50 @@
+# .github/workflows/deploy.yml
+name: Deploy React App to GitHub Pages 🚀
+
+on:
+  # Запускати цей робочий процес при кожному push до гілки 'main'
+  push:
+    branches:
+      - main
+  # Дозволити ручний запуск з інтерфейсу GitHub
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    # Запускати на останній версії Ubuntu
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout: Клонування репозиторію
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+        with:
+          # Потрібно для повної історії, щоб gh-pages дія працювала коректно
+          fetch-depth: 0
+
+      # 2. Setup Node.js: Налаштування середовища Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20" # Рекомендована LTS версія
+          cache: "npm" # Кешування залежностей для прискорення
+
+      # 3. Install Dependencies: Встановлення пакетів
+      - name: Install dependencies
+        run: npm install
+
+      # 4. Build: Збірка React-проєкту
+      - name: Build project 🏗️
+        run: npm run build
+
+      # 5. Deploy to GitHub Pages: Розгортання статичної збірки
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        if: github.ref == 'refs/heads/main' # Розгортати лише з гілки main
+        with:
+          # Токен доступу, наданий GitHub автоматично
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Директорія, що містить статичні файли (типово для Vite)
+          publish_dir: ./dist
+          # Гілка, на яку буде вивантажено збірку
+          publish_branch: gh-pages

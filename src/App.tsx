@@ -6,8 +6,8 @@ import "./App.css";
 function App() {
   const [count, setCount] = useState(0);
 
-  // const test: number[] = [];
-  // console.log(test);
+  const test: string = "Test TS";
+  console.log(test);
 
   return (
     <>
@@ -19,7 +19,7 @@ function App() {
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
       </div>
-      <h1>First test Vite + React</h1>
+      <h1>First test Vite + React 1.0</h1>
       <div className="card">
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}

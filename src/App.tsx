@@ -25,6 +25,8 @@ function App() {
   const test: string = "Test TS";
   console.log(test);
 
+  let var1;
+
   const [name, setName] = useState("User");
   console.log("App render");
 

@@ -66,3 +66,7 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+.highlight {
+  border: red 1px solid;
+}

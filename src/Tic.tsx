@@ -18,11 +18,7 @@ export default function Game() {
     // setXIsNext(nextMove % 2 === 0);
   }
 
-  const moves = history.map((squares, move) => {
-    // @todo: Explain why this is happen.
-    // Without this build issue: 'squares' is declared but its value is never read.
-    console.log(squares);
-
+  const moves = history.map((_squares, move) => {
     let description;
     if (move > 0) {
       description = "Go to move #" + move;
@@ -55,9 +51,11 @@ export default function Game() {
 function Square({
   value,
   onSquareClick,
+  isWinning,
 }: {
   value: string | null;
   onSquareClick?: () => void;
+  isWinning?: boolean;
 }) {
   // console.log("Square render");
 
@@ -68,7 +66,11 @@ function Square({
   // }
 
   return (
-    <button className="square" onClick={onSquareClick}>
+    <button
+      className={`square ${isWinning ? "highlight" : ""}`}
+      onClick={onSquareClick}
+      aria-pressed={!!value}
+    >
       {value}
     </button>
   );
@@ -89,10 +91,17 @@ function Board({
   // const [xIsNext, setXIsNext] = useState(true);
   // const [squares, setSquares] = useState(Array(9).fill(null));
 
-  const winner = calculateWinner(squares);
+  // calculateWinner now returns an object with the winner and the winning line
+  const winning = calculateWinner(squares);
+  const winnerPlayer = winning ? winning.winner : null;
+  const winningLine = winning ? winning.line : null;
+
+  const isWinningIndex = (i: number) =>
+    winningLine ? winningLine.includes(i) : false;
+
   let status;
-  if (winner) {
-    status = "Winner: " + winner;
+  if (winnerPlayer) {
+    status = "Winner: " + winnerPlayer;
   } else {
     status = "Next player: " + (xIsNext ? "X" : "O");
   }
@@ -101,19 +110,55 @@ function Board({
     <>
       <div className="status">{status}</div>
       <div className="board-row">
-        <Square value={squares[0]} onSquareClick={() => handleClick(0)} />
-        <Square value={squares[1]} onSquareClick={() => handleClick(1)} />
-        <Square value={squares[2]} onSquareClick={() => handleClick(2)} />
+        <Square
+          value={squares[0]}
+          onSquareClick={() => handleClick(0)}
+          isWinning={isWinningIndex(0)}
+        />
+        <Square
+          value={squares[1]}
+          onSquareClick={() => handleClick(1)}
+          isWinning={isWinningIndex(1)}
+        />
+        <Square
+          value={squares[2]}
+          onSquareClick={() => handleClick(2)}
+          isWinning={isWinningIndex(2)}
+        />
       </div>
       <div className="board-row">
-        <Square value={squares[3]} onSquareClick={() => handleClick(3)} />
-        <Square value={squares[4]} onSquareClick={() => handleClick(4)} />
-        <Square value={squares[5]} onSquareClick={() => handleClick(5)} />
+        <Square
+          value={squares[3]}
+          onSquareClick={() => handleClick(3)}
+          isWinning={isWinningIndex(3)}
+        />
+        <Square
+          value={squares[4]}
+          onSquareClick={() => handleClick(4)}
+          isWinning={isWinningIndex(4)}
+        />
+        <Square
+          value={squares[5]}
+          onSquareClick={() => handleClick(5)}
+          isWinning={isWinningIndex(5)}
+        />
       </div>
       <div className="board-row">
-        <Square value={squares[6]} onSquareClick={() => handleClick(6)} />
-        <Square value={squares[7]} onSquareClick={() => handleClick(7)} />
-        <Square value={squares[8]} onSquareClick={() => handleClick(8)} />
+        <Square
+          value={squares[6]}
+          onSquareClick={() => handleClick(6)}
+          isWinning={isWinningIndex(6)}
+        />
+        <Square
+          value={squares[7]}
+          onSquareClick={() => handleClick(7)}
+          isWinning={isWinningIndex(7)}
+        />
+        <Square
+          value={squares[8]}
+          onSquareClick={() => handleClick(8)}
+          isWinning={isWinningIndex(8)}
+        />
       </div>
     </>
   );
@@ -149,7 +194,7 @@ function Board({
         squares[a] === squares[b] &&
         squares[a] === squares[c]
       ) {
-        return squares[a];
+        return { winner: squares[a], line: [a, b, c] };
       }
     }
     return null;

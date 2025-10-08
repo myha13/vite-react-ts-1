@@ -25,8 +25,19 @@ function App() {
   const test: string = "Test TS";
   console.log(test);
 
+  const [name, setName] = useState("User");
+  console.log("App render");
+
   return (
     <>
+      <h2>Hello, {name}!</h2>
+      <button
+        onClick={() => {
+          setName("New User");
+        }}
+      >
+        Change Name
+      </button>
       <div>
         <a href="https://vite.dev" target="_blank">
           <img src={viteLogo} className="logo" alt="Vite logo" />

@@ -19,6 +19,9 @@ export default function Game() {
   }
 
   const moves = history.map((squares, move) => {
+    // Without this build issue: 'squares' is declared but its value is never read.
+    console.log(squares);
+
     let description;
     if (move > 0) {
       description = "Go to move #" + move;

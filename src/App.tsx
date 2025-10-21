@@ -3,6 +3,7 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
 import Game from "./Tic.tsx";
+import MyTimer from "./MyTimer.tsx";
 
 // Custom hooks - користувацькі хуки
 // Virtual DOM - віртуальний DOM
@@ -16,17 +17,20 @@ import Game from "./Tic.tsx";
 // useCallback - хук зворотного виклику
 // useContext - хук контексту
 
+//Intersection Observer API
+//https://picsum.photos/v2/list?page=4&limit=5
+
 function App() {
   const [count, setCount] = useState(() => 0);
 
   // function f(a) {
   //   console.log(a);
   // }
-  const test: string = "Test TS";
-  console.log(test);
+  // const test: string = "Test TS";
+  // console.log(test);
 
   const [name, setName] = useState("User");
-  console.log("App render");
+  // console.log("App render");
 
   return (
     <>
@@ -36,8 +40,11 @@ function App() {
           setName("New User");
         }}
       >
-        Change Name
+        Change NameX
       </button>
+      <div>
+        <>{name !== "New User" ? <MyTimer /> : true}</>
+      </div>
       <div>
         <a href="https://vite.dev" target="_blank">
           <img src={viteLogo} className="logo" alt="Vite logo" />

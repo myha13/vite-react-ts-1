@@ -20,6 +20,8 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
+      - name: TypeScript Check
+        run: npx tsc -b
       - name: Run Linter
         run: npm run lint
       - name: Build

@@ -26,7 +26,7 @@ export default function CameraImage() {
 
         // videoRef.current.srcObject = currentStreamRef.current;
         videoRef.current.srcObject = currentStream;
-        videoRef.current.load();
+        // videoRef.current.load();
         videoRef.current.play();
       } catch (err) {
         console.error("Помилка доступу до камери: ", err);

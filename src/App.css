@@ -67,3 +67,11 @@ nav a.active {
 .images-container button {
   visibility: hidden;
 }
+
+.video {
+  /* display: none; */
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 300px;
+}

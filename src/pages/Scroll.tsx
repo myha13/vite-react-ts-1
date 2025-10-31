@@ -20,17 +20,37 @@ export default function ScrollPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [images, setImages] = useState<PicsumImage[]>([]);
   const [videoLoaded, setVideoLoaded] = useState(false);
-  const [detector, setDetector] =
-    useState<handPoseDetection.HandDetector | null>(null);
   const loadMoreRef = useRef<HTMLButtonElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  // Timer for getting video.
+  // Initialize tensorflow hand detector.
   useEffect(() => {
-    if (!detector) return;
+    if (!videoLoaded || !videoRef.current) return;
+
+    const videoElement = videoRef.current;
+    let detector: handPoseDetection.HandDetector | null = null;
+    let isCleanedUp = false;
+    let timer = 0;
+    let isCleanedUpTimer = false;
+
+    const disposeScroolByHands = () => {
+      isCleanedUpTimer = true;
+
+      if (timer) {
+        clearInterval(timer);
+      }
+    };
 
     const scrollByHands = async () => {
-      const hands = await detector.estimateHands(videoRef.current!);
+      if (!detector) {
+        return;
+      }
+      const hands = await detector.estimateHands(videoElement);
+
+      if (isCleanedUpTimer) {
+        disposeScroolByHands();
+        return;
+      }
 
       hands.forEach((hand: handPoseDetection.Hand) => {
         if (!hand.keypoints || hand.score < 0.5) return;
@@ -49,31 +69,23 @@ export default function ScrollPage() {
             top: 100,
             behavior: "smooth",
           });
-          console.log("scroll down");
         } else {
           window.scrollBy({
             top: -100,
             behavior: "smooth",
           });
-          console.log("scroll up");
         }
       });
     };
 
-    const timer = window.setInterval(() => {
-      scrollByHands();
-    }, 300);
+    const disposeDetector = () => {
+      isCleanedUp = true;
 
-    return () => {
-      clearInterval(timer);
+      if (detector && detector.dispose) {
+        detector.dispose();
+      }
     };
-  }, [detector]);
 
-  // Initialize tensorflow hand detector.
-  useEffect(() => {
-    if (!videoLoaded) return;
-
-    let detector: handPoseDetection.HandDetector | null = null;
     const loadDetector = async () => {
       const model = handPoseDetection.SupportedModels.MediaPipeHands;
 
@@ -81,13 +93,11 @@ export default function ScrollPage() {
         {
           runtime: "mediapipe", // or 'tfjs',
           solutionPath: "node_modules/@mediapipe/hands",
-          modelType: "full",
-          maxHands: 2,
         };
 
-      // Load tensorflow with 'tfjs'.
-      // // await tf.setBackend("webgl");
-      // // await tf.ready();
+      // // Load tensorflow with 'tfjs'.
+      // await tf.setBackend("webgl");
+      // await tf.ready();
       // const detectorConfig: handPoseDetection.MediaPipeHandsTfjsModelConfig = {
       //   runtime: "tfjs",
       //   // modelType: "full",
@@ -95,48 +105,72 @@ export default function ScrollPage() {
       // };
 
       detector = await handPoseDetection.createDetector(model, detectorConfig);
-      setDetector(detector);
+
+      if (isCleanedUp) {
+        disposeDetector();
+        return;
+      }
+
+      timer = window.setInterval(() => {
+        scrollByHands();
+      }, 300);
+    };
+
+    const dispose = () => {
+      disposeScroolByHands();
+      disposeDetector();
     };
 
     loadDetector();
 
-    return () => {
-      // @to fix: if run on load (dependencies - []) - Do not removes first initialed detector!
-      if (detector && detector.dispose) {
-        detector.dispose();
-        setDetector(null);
-        console.log("stopped detector.");
-      }
-    };
+    return dispose;
   }, [videoLoaded]);
 
-  // Load video.
+  // Start camera
   useEffect(() => {
     if (!videoRef.current) return;
+    const videoElement = videoRef.current;
 
     let currentStream: MediaStream | null = null;
+    let isCleanedUp = false;
+
+    const stopCamera = () => {
+      isCleanedUp = true;
+
+      if (videoElement.srcObject === currentStream) {
+        videoElement.srcObject = null;
+        setVideoLoaded(false);
+      }
+
+      if (currentStream) {
+        currentStream.getTracks().forEach((track) => track.stop());
+      }
+    };
 
     const startCamera = async () => {
-      if (!videoRef.current) return;
-
       try {
         currentStream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: false,
         });
 
-        videoRef.current.srcObject = currentStream;
+        if (isCleanedUp) {
+          stopCamera();
+          return;
+        }
+
+        videoElement.srcObject = currentStream;
         // videoRef.current.load();
         // @todo: cause issue: Uncaught (in promise) AbortError: The play() request was interrupted by a new load request.
         // videoRef.current.play();
 
         setVideoLoaded(true);
+        // cameraManager.onVideoLoaded = () => setVideoLoaded(true);
 
         const videoTrack = currentStream.getVideoTracks()[0];
-        videoTrack.onended = () => {
-          console.log("Камера відключена або дозвіл відкликано!");
+        videoTrack.addEventListener("ended", () => {
           stopCamera();
-        };
+        });
       } catch (err) {
         console.error("Помилка доступу до камери: ", err);
         alert("Потрібен дозвіл на використання камери!");
@@ -145,18 +179,7 @@ export default function ScrollPage() {
 
     startCamera();
 
-    const stopCamera = () => {
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
-
-      if (currentStream) {
-        currentStream.getTracks().forEach((track) => track.stop());
-      }
-      setVideoLoaded(false);
-    };
-
-    return stopCamera();
+    return stopCamera;
   }, []);
 
   // Load images.

@@ -2,14 +2,10 @@ export default class cameraManager {
   currentStream: MediaStream | null = null;
   isCleanedUp: boolean = false;
   readonly videoElement: HTMLVideoElement;
-  onVideoLoaded: (b: boolean) => void;
+  onVideoLoaded: undefined | ((b: boolean) => void);
 
-  constructor(
-    videoElement: HTMLVideoElement,
-    onVideoLoaded: (b: boolean) => void
-  ) {
+  constructor(videoElement: HTMLVideoElement) {
     this.videoElement = videoElement;
-    this.onVideoLoaded = onVideoLoaded;
   }
 
   // public onVideoLoaded(_videoLoaded: boolean) {}
@@ -19,7 +15,7 @@ export default class cameraManager {
 
     if (this.videoElement.srcObject === this.currentStream) {
       this.videoElement.srcObject = null;
-      this.onVideoLoaded(false);
+      this.onVideoLoaded?.(false);
     }
 
     if (this.currentStream) {
@@ -40,7 +36,7 @@ export default class cameraManager {
       }
 
       this.videoElement.srcObject = this.currentStream;
-      this.onVideoLoaded(true);
+      this.onVideoLoaded?.(true);
 
       const videoTrack = this.currentStream.getVideoTracks()[0];
       videoTrack.addEventListener("ended", () => {

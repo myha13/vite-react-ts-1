@@ -1,4 +1,5 @@
 import * as handPoseDetection from "@tensorflow-models/hand-pose-detection";
+// import "@tensorflow/tfjs-backend-webgl";
 
 export default class scrollManager {
   isCleanedUp: boolean = false;
@@ -11,24 +12,19 @@ export default class scrollManager {
     this.videoElement = videoElement;
   }
 
-  disposeScroolByHands = () => {
-    this.isCleanedUpTimer = true;
-
+  disposeInterval = () => {
     if (this.timer) {
       clearInterval(this.timer);
+      this.timer = 0;
     }
   };
 
   scrollByHands = async () => {
-    if (!this.detector) {
+    if (!this.detector || this.isCleanedUp) {
       return;
     }
-    const hands = await this.detector.estimateHands(this.videoElement);
 
-    if (this.isCleanedUpTimer) {
-      this.disposeScroolByHands();
-      return;
-    }
+    const hands = await this.detector.estimateHands(this.videoElement);
 
     for (const hand of hands) {
       if (!hand.keypoints || hand.score < 0.5) return;
@@ -57,11 +53,8 @@ export default class scrollManager {
   };
 
   disposeDetector = () => {
-    this.isCleanedUp = true;
-
-    if (this.detector && this.detector.dispose) {
-      this.detector.dispose();
-    }
+    this.detector?.dispose();
+    this.detector = null;
   };
 
   loadDetector = async () => {
@@ -70,7 +63,7 @@ export default class scrollManager {
     const detectorConfig: handPoseDetection.MediaPipeHandsMediaPipeModelConfig =
       {
         runtime: "mediapipe", // or 'tfjs',
-        solutionPath: "node_modules/@mediapipe/hands",
+        solutionPath: "https://cdn.jsdelivr.net/npm/@mediapipe/hands",
       };
 
     // // Load tensorflow with 'tfjs'.
@@ -88,17 +81,16 @@ export default class scrollManager {
     );
 
     if (this.isCleanedUp) {
-      this.disposeDetector();
+      this.dispose();
       return;
     }
 
-    this.timer = window.setInterval(() => {
-      this.scrollByHands();
-    }, 300);
+    this.timer = window.setInterval(this.scrollByHands, 300);
   };
 
   dispose = () => {
-    this.disposeScroolByHands();
+    this.isCleanedUp = true;
+    this.disposeInterval();
     this.disposeDetector();
   };
 }

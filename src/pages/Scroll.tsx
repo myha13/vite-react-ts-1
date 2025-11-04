@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import "@tensorflow/tfjs-backend-webgl";
-import "@mediapipe/hands";
 import cameraManager from "./../Scroll/cameraManager.ts";
 import scrollManager from "./../Scroll/scrollManager.ts";
 
@@ -25,29 +23,18 @@ export default function ScrollPage() {
   // Initialize tensorflow hand detector.
   useEffect(() => {
     if (!videoLoaded || !videoRef.current) return;
-
     const scrollManagerObj = new scrollManager(videoRef.current);
-
     scrollManagerObj.loadDetector();
-
-    return scrollManagerObj.dispose;
+    return () => scrollManagerObj.dispose();
   }, [videoLoaded]);
 
   // Start camera
   useEffect(() => {
     if (!videoRef.current) return;
-
-    const cameraManagerObj = new cameraManager(
-      videoRef.current,
-      setVideoLoaded
-    );
-
-    // @todo How better to do this? or in constructor?
-    // cameraManagerObj.onVideoLoaded = (loaded) => setVideoLoaded(loaded);
-
+    const cameraManagerObj = new cameraManager(videoRef.current);
+    cameraManagerObj.onVideoLoaded = setVideoLoaded;
     cameraManagerObj.startCamera();
-
-    return cameraManagerObj.stopCamera;
+    return () => cameraManagerObj.stopCamera();
   }, []);
 
   // Load images.
